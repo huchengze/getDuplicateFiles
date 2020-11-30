@@ -16,6 +16,6 @@ make
 ## Test
 
 ```sh
-# Make sure the directory in main_test.go(DeleteFilesBySize) is exist
+# Make sure the directory in main_test.go(FindFilesInSameSize) is exist
 go test
 ```
