@@ -65,9 +65,6 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 		for _, file := range sameSizeFiles {
 			m, err := GetFileMd5(file)
 			if err != nil {
-				return nil, err
-			}
-			if m == "ignore" {
 				continue
 			}
 			if _, ok := filesmap[m]; !ok {
@@ -93,7 +90,7 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 func GetFileMd5(path string) (string, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
-		return "ignore", nil
+		return "", err
 	}
 	defer f.Close()
 	h := md5.New()
