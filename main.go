@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 	"sync"
 )
 
@@ -38,6 +39,9 @@ func FindFilesInSameSize(filedir string) (files map[int64][]string, filesNum int
 
 	err = filepath.Walk(filedir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			if strings.Contains(err.Error(), "Access is denied") {
+				return nil
+			}
 			return err
 		}
 		if !info.IsDir() {
