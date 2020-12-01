@@ -5,8 +5,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type DuplicateFiles struct {
@@ -90,7 +92,7 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 func GetFileMd5(path string) (string, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
-		return "", nil
+		return RandString(6), nil
 	}
 	defer f.Close()
 	h := md5.New()
@@ -99,4 +101,15 @@ func GetFileMd5(path string) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func RandString(len int) string {
+	var r *rand.Rand
+	r = rand.New(rand.NewSource(time.Now().Unix()))
+	bytes := make([]byte, len)
+	for i := 0; i < len; i++ {
+		b := r.Intn(26) + 97
+		bytes[i] = byte(b)
+	}
+	return string(bytes)
 }
