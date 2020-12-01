@@ -64,7 +64,7 @@ func FindFilesInSameSize(filedir string) (files map[int64][]string, filesNum int
 func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []DuplicateFiles, err error) {
 	debug.SetMaxThreads(100000)
 	var wg sync.WaitGroup
-	ch := make(chan DuplicateFiles, 100000)
+	ch := make(chan DuplicateFiles, 10000)
 	go func(allDuplicateFiles *[]DuplicateFiles) {
 		for {
 			select {
