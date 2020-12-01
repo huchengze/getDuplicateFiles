@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime/debug"
+	"sync"
 )
 
 type DuplicateFiles struct {
@@ -60,30 +62,48 @@ func FindFilesInSameSize(filedir string) (files map[int64][]string, filesNum int
 }
 
 func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []DuplicateFiles, err error) {
+	debug.SetMaxThreads(100000)
+	var wg sync.WaitGroup
+	ch := make(chan DuplicateFiles, 100000)
+	go func(allDuplicateFiles *[]DuplicateFiles) {
+		for {
+			select {
+			case duplicateFiles := <-ch:
+				if duplicateFiles.num > 1 {
+					*allDuplicateFiles = append(*allDuplicateFiles, duplicateFiles)
+				}
+			}
+		}
+	}(&allDuplicateFiles)
 	for size, sameSizeFiles := range files {
-		filesmap := make(map[string][]string)
-		for _, file := range sameSizeFiles {
-			m, err := GetFileMd5(file)
-			if err != nil {
-				continue
+		wg.Add(1)
+		go func(size int64, sameSizeFiles []string) {
+			defer wg.Done()
+			filesmap := make(map[string][]string)
+			for _, file := range sameSizeFiles {
+				m, err := GetFileMd5(file)
+				if err != nil {
+					continue
+				}
+				if _, ok := filesmap[m]; !ok {
+					filesmap[m] = []string{file}
+				} else {
+					filesmap[m] = append(filesmap[m], file)
+				}
 			}
-			if _, ok := filesmap[m]; !ok {
-				filesmap[m] = []string{file}
-			} else {
-				filesmap[m] = append(filesmap[m], file)
+			for _, files := range filesmap {
+				if len(files) > 1 {
+					ch <- DuplicateFiles{
+						size:  size,
+						num:   len(files),
+						files: files,
+					}
+				}
 			}
-		}
-		for _, files := range filesmap {
-			if len(files) > 1 {
-				allDuplicateFiles = append(allDuplicateFiles, DuplicateFiles{
-					size:  size,
-					num:   len(files),
-					files: files,
-				})
-			}
-		}
-
+			return
+		}(size, sameSizeFiles)
 	}
+	wg.Wait()
 	return
 }
 
