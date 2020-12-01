@@ -28,7 +28,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nAll duplicate files: %#v\n", filesNum, allDuplicateFiles)
+	fmt.Printf("Get duplicate files success.\nAll duplicate files: %#v\nTotal number of detected files: %d\n", allDuplicateFiles, filesNum)
 }
 
 func FindFilesInSameSize(filedir string) (files map[int64][]string, filesNum int, err error) {
@@ -63,7 +63,7 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 	for size, sameSizeFiles := range files {
 		filesmap := make(map[string][]string)
 		for _, file := range sameSizeFiles {
-			m, err := GetFileMd5v2(file)
+			m, err := GetFileMd5(file)
 			if err != nil {
 				return nil, err
 			}
@@ -87,39 +87,16 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 	return
 }
 
-// Deprecated: Use GetFileMd5v2 instead.
-func GetFileMd5v1(path string) (string, error) {
+func GetFileMd5(path string) (string, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	start := int64(0)
-	h := md5.New()
-	for {
-		c := make([]byte, 4*1024)
-		_, err := f.ReadAt(c, start)
-		if err != nil && err != io.EOF {
-			return "", err
-		}
-		if _, e := h.Write(c); e != nil {
-			return "", e
-		}
-		if err == io.EOF {
-			break
-		}
-		start += int64(len(c))
-	}
-	return hex.EncodeToString(h.Sum(nil)), nil
-}
-
-func GetFileMd5v2(path string) (string, error) {
-	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
-	if err != nil {
-		return "", err
+		return "", nil
 	}
 	defer f.Close()
 	h := md5.New()
-	io.Copy(h, f)
+	_, err = io.Copy(h, f)
+	if err != nil {
+		return "", err
+	}
 	return hex.EncodeToString(h.Sum(nil)), nil
 }

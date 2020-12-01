@@ -7,12 +7,12 @@ import (
 
 /*
 Get duplicate files success.
-Total number of detected files: 12
-All duplicate files: []main.DuplicateFiles{main.DuplicateFiles{size:16, num:2, files:[]string{"C:\\Users\\Administrator\\Desktop\\getDuplicateFiles\\example\\a", "C:\\Users\\Administrator\\Desktop\\getDuplicateFiles\\example\\b"}}}
+All duplicate files: []main.DuplicateFiles{main.DuplicateFiles{size:9, num:3, files:[]string{"C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\example\\c", "C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\example\\e", "C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\example\\g"}}, main.DuplicateFiles{size:196, num:3, files:[]string{"C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\.git\\logs\\HEAD", "C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\.git\\logs\\refs\\heads\\main", "C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\.git\\logs\\refs\\remotes\\origin\\HEAD"}}, main.DuplicateFiles{size:16, num:2, files:[]string{"C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\example\\a", "C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\example\\b"}}, main.DuplicateFiles{size:0, num:2, files:[]string{"C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\example\\d", "C:\\Users\\huchengze\\Desktop\\getDuplicateFiles\\example\\f"}}}
+Total number of detected files: 72
 */
 
 func TestGetDuplicateFiles(t *testing.T) {
-	files, filesNum, err := FindFilesInSameSize("C:\\Users\\Administrator\\Desktop\\getDuplicateFiles")
+	files, filesNum, err := FindFilesInSameSize("C:\\Users\\huchengze\\Desktop\\getDuplicateFiles")
 	if err != nil {
 		fmt.Println("FindFilesInSameSize failed:")
 		t.Error(err)
@@ -26,6 +26,5 @@ func TestGetDuplicateFiles(t *testing.T) {
 		return
 	}
 
-	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nAll duplicate files: %#v\n", filesNum, allDuplicateFiles)
+	fmt.Printf("Get duplicate files success.\nAll duplicate files: %#v\nTotal number of detected files: %d\n", allDuplicateFiles, filesNum)
 }
-

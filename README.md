@@ -3,8 +3,8 @@
 Just for win10, use `Release` to get different architecture versions.
 
 ```sh
-# Select the directory you want to detect, ep: C:\Users\Administrator\Desktop\getDuplicateFiles
-.\bin\getDuplicateFiles C:\Users\Administrator\Desktop\getDuplicateFiles
+# Select the directory you want to detect, ep: C:\Users\huchengze\Desktop\getDuplicateFiles
+.\bin\getDuplicateFiles C:\Users\huchengze\Desktop\getDuplicateFiles
 ```
 
 ## Release
