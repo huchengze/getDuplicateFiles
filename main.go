@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -62,7 +63,7 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 	for size, sameSizeFiles := range files {
 		filesmap := make(map[string][]string)
 		for _, file := range sameSizeFiles {
-			m, err := GetFileMd5(file)
+			m, err := GetFileMd5v2(file)
 			if err != nil {
 				return nil, err
 			}
@@ -86,16 +87,17 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 	return
 }
 
-func GetFileMd5(path string) (string, error) {
+// Deprecated: Use GetFileMd5v2 instead.
+func GetFileMd5v1(path string) (string, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
-	c := make([]byte, 4*1024*1024)
 	start := int64(0)
 	h := md5.New()
 	for {
+		c := make([]byte, 4*1024)
 		_, err := f.ReadAt(c, start)
 		if err != nil && err != io.EOF {
 			return "", err
@@ -108,5 +110,16 @@ func GetFileMd5(path string) (string, error) {
 		}
 		start += int64(len(c))
 	}
-	return string(h.Sum(nil)), nil
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func GetFileMd5v2(path string) (string, error) {
+	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	h := md5.New()
+	io.Copy(h, f)
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
