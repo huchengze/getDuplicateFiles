@@ -14,13 +14,13 @@ import (
 	"sync"
 )
 
+var fileDir string
+
 type DuplicateFiles struct {
 	size  int64
 	num   int
 	files []string
 }
-
-var fileDir string
 
 func init() {
 	filedir := os.Args[1]
@@ -87,15 +87,17 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 	var wg sync.WaitGroup
 	ch1 := make(chan DuplicateFiles, maxWorkerNum)
 	ch2 := make(chan DuplicateFiles, len(files)/maxWorkerNum+1)
-	donech := make(chan bool, maxWorkerNum)
+	doneCh := make(chan bool, maxWorkerNum)
+
 	go func() {
 		for size, sameSizeFiles := range files {
 			ch1 <- DuplicateFiles{size: size, files: sameSizeFiles}
 		}
 		for i := 0; i < maxWorkerNum; i++ {
-			donech <- true
+			doneCh <- true
 		}
 	}()
+
 	go func(allDuplicateFiles *[]DuplicateFiles) {
 		for {
 			select {
@@ -110,40 +112,43 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 
 	for i := 0; i < maxWorkerNum; i++ {
 		wg.Add(1)
-		go func(ch1 chan DuplicateFiles) {
-			for {
-				select {
-				case sSizeFiles := <-ch1:
-					filesmap := make(map[string][]string)
-					for _, file := range sSizeFiles.files {
-						m, err := GetFileMd5(file)
-						if err != nil {
-							continue
-						}
-						if _, ok := filesmap[m]; !ok {
-							filesmap[m] = []string{file}
-						} else {
-							filesmap[m] = append(filesmap[m], file)
-						}
-					}
-					for _, files := range filesmap {
-						if len(files) > 1 {
-							ch2 <- DuplicateFiles{
-								size:  sSizeFiles.size,
-								num:   len(files),
-								files: files,
-							}
-						}
-					}
-				case <-donech:
-					wg.Done()
-				default:
-				}
-			}
-		}(ch1)
+		go worker(ch1, ch2, doneCh, &wg)
 	}
+
 	wg.Wait()
 	return
+}
+
+func worker(ch1, ch2 chan DuplicateFiles, doneCh chan bool, wg *sync.WaitGroup) {
+	for {
+		select {
+		case sSizeFiles := <-ch1:
+			filesmap := make(map[string][]string)
+			for _, file := range sSizeFiles.files {
+				m, err := GetFileMd5(file)
+				if err != nil {
+					continue
+				}
+				if _, ok := filesmap[m]; !ok {
+					filesmap[m] = []string{file}
+				} else {
+					filesmap[m] = append(filesmap[m], file)
+				}
+			}
+			for _, files := range filesmap {
+				if len(files) > 1 {
+					ch2 <- DuplicateFiles{
+						size:  sSizeFiles.size,
+						num:   len(files),
+						files: files,
+					}
+				}
+			}
+		case <-doneCh:
+			wg.Done()
+		default:
+		}
+	}
 }
 
 func GetFileMd5(path string) (string, error) {
@@ -152,21 +157,25 @@ func GetFileMd5(path string) (string, error) {
 		return "", err
 	}
 	defer f.Close()
+
 	h := md5.New()
 	_, err = io.Copy(h, f)
 	if err != nil {
 		return "", err
 	}
+
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 func WriteResultFile(fileDir string, allDuplicateFiles []DuplicateFiles) error {
-	result := fmt.Sprintf("Get duplicate files in %s.\nTotal number of detected files groups: %d.\n", fileDir, len(allDuplicateFiles))
 	sort.Slice(allDuplicateFiles, func(i, j int) bool {
 		return allDuplicateFiles[i].size > allDuplicateFiles[j].size
 	})
+
+	result := fmt.Sprintf("Get duplicate files in %s.\nTotal number of detected files groups: %d.\n", fileDir, len(allDuplicateFiles))
 	for _, allDuplicateFile := range allDuplicateFiles {
 		result += fmt.Sprintf("\nsize: %d\nnum: %d\nfiles: %s\n", allDuplicateFile.size, allDuplicateFile.num, strings.Join(allDuplicateFile.files, ","))
 	}
+
 	return ioutil.WriteFile("result.txt", []byte(result), 0644)
 }
