@@ -26,5 +26,11 @@ func TestGetDuplicateFiles(t *testing.T) {
 		return
 	}
 
-	fmt.Printf("Get duplicate files success.\nAll duplicate files: %#v\nTotal number of detected files: %d\n", allDuplicateFiles, filesNum)
+	err = WriteResultFile(fileDir, allDuplicateFiles)
+	if err != nil {
+		fmt.Printf("WriteResultFile failed, err: %s\n", err.Error())
+		return
+	}
+
+	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nTotal number of detected files: %d\n", filesNum, len(allDuplicateFiles))
 }
