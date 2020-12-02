@@ -14,22 +14,18 @@ import (
 	"sync"
 )
 
-var fileDir string
-
 type DuplicateFiles struct {
 	size  int64
 	num   int
 	files []string
 }
 
-func init() {
-	filedir := os.Args[1]
-	if filedir == "" {
-		filedir, _ = os.Getwd()
-	}
-}
-
 func main() {
+	fileDir := ""
+	if len(os.Args) > 1 {
+		fileDir = os.Args[1]
+	}
+
 	files, filesNum, err := FindFilesInSameSize(fileDir)
 	if err != nil {
 		fmt.Printf("FindFilesInSameSize failed, err: %s\n", err.Error())
@@ -51,10 +47,13 @@ func main() {
 	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nTotal number of detected files: %d\n", filesNum, len(allDuplicateFiles))
 }
 
-func FindFilesInSameSize(filedir string) (files map[int64][]string, filesNum int, err error) {
+func FindFilesInSameSize(fileDir string) (files map[int64][]string, filesNum int, err error) {
 	files = make(map[int64][]string)
+	if fileDir == "" {
+		fileDir, _ = os.Getwd()
+	}
 
-	err = filepath.Walk(filedir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(fileDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			if strings.Contains(err.Error(), "Access is denied") {
 				return nil
@@ -123,19 +122,19 @@ func worker(ch1, ch2 chan DuplicateFiles, doneCh chan bool, wg *sync.WaitGroup) 
 	for {
 		select {
 		case sSizeFiles := <-ch1:
-			filesmap := make(map[string][]string)
+			filesMap := make(map[string][]string)
 			for _, file := range sSizeFiles.files {
 				m, err := GetFileMd5(file)
 				if err != nil {
 					continue
 				}
-				if _, ok := filesmap[m]; !ok {
-					filesmap[m] = []string{file}
+				if _, ok := filesMap[m]; !ok {
+					filesMap[m] = []string{file}
 				} else {
-					filesmap[m] = append(filesmap[m], file)
+					filesMap[m] = append(filesMap[m], file)
 				}
 			}
-			for _, files := range filesmap {
+			for _, files := range filesMap {
 				if len(files) > 1 {
 					ch2 <- DuplicateFiles{
 						size:  sSizeFiles.size,
@@ -168,6 +167,9 @@ func GetFileMd5(path string) (string, error) {
 }
 
 func WriteResultFile(fileDir string, allDuplicateFiles []DuplicateFiles) error {
+	if fileDir == "" {
+		fileDir, _ = os.Getwd()
+	}
 	sort.Slice(allDuplicateFiles, func(i, j int) bool {
 		return allDuplicateFiles[i].size > allDuplicateFiles[j].size
 	})

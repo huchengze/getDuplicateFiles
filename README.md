@@ -17,6 +17,5 @@ make
 ## Test
 
 ```sh
-# Make sure the directory in main_test.go(FindFilesInSameSize) exists
 go test
 ```

@@ -12,7 +12,8 @@ Total number of detected files: 72
 */
 
 func TestGetDuplicateFiles(t *testing.T) {
-	files, filesNum, err := FindFilesInSameSize("C:\\Users\\huchengze\\Desktop\\getDuplicateFiles")
+	fileDir := ""
+	files, filesNum, err := FindFilesInSameSize(fileDir)
 	if err != nil {
 		fmt.Println("FindFilesInSameSize failed:")
 		t.Error(err)
