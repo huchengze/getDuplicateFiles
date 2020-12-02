@@ -82,10 +82,10 @@ func FindFilesInSameSize(fileDir string) (files map[int64][]string, filesNum int
 }
 
 func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []DuplicateFiles, err error) {
-	maxWorkerNum := runtime.NumCPU()
+	maxWorkerNum := runtime.NumCPU() - 2
 	var wg sync.WaitGroup
 	ch1 := make(chan DuplicateFiles, maxWorkerNum)
-	ch2 := make(chan DuplicateFiles, len(files)/maxWorkerNum+1)
+	ch2 := make(chan DuplicateFiles, len(files))
 	doneCh := make(chan bool, maxWorkerNum)
 
 	go func() {
