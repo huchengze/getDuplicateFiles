@@ -8,7 +8,7 @@ import (
 /*
 Get duplicate files success.
 Total number of detected files: 69
-Total number of detected files groups: 4
+Total number of duplicate files groups: 4
 */
 
 func TestGetDuplicateFiles(t *testing.T) {
