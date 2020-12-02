@@ -44,7 +44,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nTotal number of detected files: %d\n", filesNum, len(allDuplicateFiles))
+	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nTotal number of detected files groups: %d\n", filesNum, len(allDuplicateFiles))
 }
 
 func FindFilesInSameSize(fileDir string) (files map[int64][]string, filesNum int, err error) {
