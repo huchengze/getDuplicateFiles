@@ -21,7 +21,7 @@ type DuplicateFiles struct {
 }
 
 func main() {
-	fileDir := ""
+	var fileDir string
 	if len(os.Args) > 1 {
 		fileDir = os.Args[1]
 	}
@@ -44,7 +44,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nTotal number of detected files groups: %d\n", filesNum, len(allDuplicateFiles))
+	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nTotal number of duplicate files groups: %d\n", filesNum, len(allDuplicateFiles))
 }
 
 func FindFilesInSameSize(fileDir string) (files map[int64][]string, filesNum int, err error) {
@@ -82,7 +82,7 @@ func FindFilesInSameSize(fileDir string) (files map[int64][]string, filesNum int
 }
 
 func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []DuplicateFiles, err error) {
-	maxWorkerNum := 0
+	var maxWorkerNum int
 	if runtime.NumCPU() > 2 {
 		maxWorkerNum = runtime.NumCPU() - 2
 	} else {
@@ -179,7 +179,7 @@ func WriteResultFile(fileDir string, allDuplicateFiles []DuplicateFiles) error {
 		return allDuplicateFiles[i].size > allDuplicateFiles[j].size
 	})
 
-	result := fmt.Sprintf("Get duplicate files in %s.\nTotal number of detected files groups: %d.\n", fileDir, len(allDuplicateFiles))
+	result := fmt.Sprintf("Get duplicate files in %s.\nTotal number of duplicate files groups: %d.\n", fileDir, len(allDuplicateFiles))
 	for _, allDuplicateFile := range allDuplicateFiles {
 		result += fmt.Sprintf("\nsize: %d\nnum: %d\nfiles: %s\n", allDuplicateFile.size, allDuplicateFile.num, strings.Join(allDuplicateFile.files, ","))
 	}

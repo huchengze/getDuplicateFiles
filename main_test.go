@@ -33,5 +33,5 @@ func TestGetDuplicateFiles(t *testing.T) {
 		return
 	}
 
-	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nTotal number of detected files groups: %d\n", filesNum, len(allDuplicateFiles))
+	fmt.Printf("Get duplicate files success.\nTotal number of detected files: %d\nTotal number of duplicate files groups: %d\n", filesNum, len(allDuplicateFiles))
 }
