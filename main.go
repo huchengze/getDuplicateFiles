@@ -89,6 +89,7 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 		maxWorkerNum = runtime.NumCPU()
 	}
 	var wg sync.WaitGroup
+	n := len(files)
 	ch1 := make(chan DuplicateFiles, maxWorkerNum)
 	ch2 := make(chan DuplicateFiles, len(files))
 	doneCh := make(chan bool, maxWorkerNum)
@@ -102,6 +103,7 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 		}
 	}()
 
+	wg.Add(1)
 	go func(allDuplicateFiles *[]DuplicateFiles) {
 		for {
 			select {
@@ -110,20 +112,24 @@ func FindDuplicateFiles(files map[int64][]string) (allDuplicateFiles []Duplicate
 					*allDuplicateFiles = append(*allDuplicateFiles, duplicateFiles)
 				}
 			default:
+				if n == 0 {
+					wg.Done()
+					return
+				}
 			}
 		}
 	}(&allDuplicateFiles)
 
 	for i := 0; i < maxWorkerNum; i++ {
 		wg.Add(1)
-		go worker(ch1, ch2, doneCh, &wg)
+		go worker(&n, ch1, ch2, doneCh, &wg)
 	}
 
 	wg.Wait()
 	return
 }
 
-func worker(ch1, ch2 chan DuplicateFiles, doneCh chan bool, wg *sync.WaitGroup) {
+func worker(n *int, ch1, ch2 chan DuplicateFiles, doneCh chan bool, wg *sync.WaitGroup) {
 	for {
 		select {
 		case sSizeFiles := <-ch1:
@@ -148,9 +154,9 @@ func worker(ch1, ch2 chan DuplicateFiles, doneCh chan bool, wg *sync.WaitGroup) 
 					}
 				}
 			}
+			*n--
 		case <-doneCh:
 			wg.Done()
-		default:
 		}
 	}
 }
